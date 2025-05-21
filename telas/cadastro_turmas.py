@@ -4,18 +4,25 @@ import streamlit as st
 def adicionar_turma(nome, turno, nivel, subnivel):
     with sqlite3.connect("dashclass.db") as conn:
         c = conn.cursor()
-        c.execute("INSERT INTO turmas (nome, turno, nivel, subnivel) VALUES (?, ?, ?, ?)",
+
+        # Cria a nova turma
+        c.execute("INSERT INTO turmas (nome, turno, nivel, subnivel) VALUES (?, ?, ?, ?)", 
                   (nome, turno, nivel, subnivel))
         turma_id = c.lastrowid
-        # Vincular aulas existentes para mesmo nível e subnível
+
+        # Busca todas as aulas que pertencem a esse nível e subnível
         c.execute('''
             SELECT a.id FROM aulas a
             JOIN disciplinas d ON a.disciplina_id = d.id
             WHERE d.nivel = ? AND d.subnivel = ?
         ''', (nivel, subnivel))
         aulas = c.fetchall()
+
+        # Cria as entradas de controle
         for (aula_id,) in aulas:
-            c.execute("INSERT INTO controle_aulas (turma_id, aula_id, status) VALUES (?, ?, '❌')", (turma_id, aula_id))
+            c.execute("INSERT INTO controle_aulas (turma_id, aula_id, status) VALUES (?, ?, '❌')", 
+                      (turma_id, aula_id))
+
         conn.commit()
 
 st.subheader("📘 Cadastro de Turmas")
@@ -27,7 +34,7 @@ if nivel == "Ensino Fundamental":
 elif nivel == "Ensino Médio":
     subnivel = st.selectbox("Ano:", ["1º ano", "2º ano", "3º ano"])
 
-nome_turma = st.text_input("Nome da Turma:")
+nome_turma = st.text_input("Nome da Turma (ex: 7º ano 1, 2º 2, ou Logística Adm,etc):")
 turno = st.selectbox("Turno:", ["Matutino", "Vespertino", "Noturno"])
 
 if st.button("Cadastrar Turma"):

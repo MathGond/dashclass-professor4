@@ -16,16 +16,25 @@ def obter_disciplinas_por_nivel(nivel, subnivel):
 def salvar_aula(disciplina_id, aula_num, titulo, conteudo):
     with sqlite3.connect("dashclass.db") as conn:
         c = conn.cursor()
-        c.execute("INSERT INTO aulas (disciplina_id, aula_num, titulo, conteudo) VALUES (?, ?, ?, ?)",
+
+        # Insere a nova aula
+        c.execute("INSERT INTO aulas (disciplina_id, aula_num, titulo, conteudo) VALUES (?, ?, ?, ?)", 
                   (disciplina_id, aula_num, titulo, conteudo))
         aula_id = c.lastrowid
-        # Vincula essa aula a todas as turmas daquele nível/subnível
+
+        # Recupera o nível e subnível da disciplina
         c.execute("SELECT nivel, subnivel FROM disciplinas WHERE id = ?", (disciplina_id,))
         nivel, subnivel = c.fetchone()
+
+        # Busca todas as turmas que pertencem ao mesmo nível e subnível
         c.execute("SELECT id FROM turmas WHERE nivel = ? AND subnivel = ?", (nivel, subnivel))
         turmas = c.fetchall()
+
+        # Para cada turma, cria uma entrada na tabela controle_aulas
         for turma in turmas:
-            c.execute("INSERT INTO controle_aulas (turma_id, aula_id, status) VALUES (?, ?, '❌')", (turma[0], aula_id))
+            c.execute("INSERT INTO controle_aulas (turma_id, aula_id, status) VALUES (?, ?, '❌')", 
+                      (turma[0], aula_id))
+
         conn.commit()
 
 st.subheader("🧾 Registro de Aulas")
